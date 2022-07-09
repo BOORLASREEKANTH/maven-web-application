@@ -1,0 +1,48 @@
+pipeline
+{
+    
+agent any
+ tools{
+    maven"maven3.8.5"
+}
+stages{
+ //checkout code stages
+ stage('checkout code')
+ {
+  steps{     
+   git branch: 'development', credentialsId: 'a7fabdde-8e42-41e4-a1a6-925356ecd585', url: 'https://github.com/BOORLASREEKANTH/maven-web-application.git'
+  }
+ }
+ //build stage
+ stage('build')
+ {
+  steps{     
+     sh "mvn clean package"
+  }
+ }
+ //excute sonarqube report
+ stage('excute sonarqube report')
+ {
+  steps{     
+    sh "mvn sonar:sonar"
+  }
+ }
+ //uploadartifact into nexus
+ stage('uploadartifact into nexus')
+ {
+  steps{     
+     sh "mvn deploy"
+  }
+ }
+ //deployappinto tomcatserver
+ stage('deployinto tomcatserver'){
+ steps{
+     sshagent(['be33027d-2e1c-415b-acc3-08e2b3f976b9']){
+         sh "scp -o stricthostkeychecking=no target/maven-web-application.war ec2-user@172.31.8.57:/opt/apache-tomcat-9.0.64/webapps"
+     }
+ }     
+     
+ }
+}//stages closing
+
+}//pipeline closing
